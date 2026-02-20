@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 process.on("unhandledRejection", (err) => {
   console.error("❌ Unhandled Rejection:", err);
   process.exit(1);
@@ -9,10 +10,6 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
-console.log("✅ Booting server...");
-console.log("MONGO_URI set?", !!process.env.MONGO_URI);
-console.log("JWT_SECRET set?", !!process.env.JWT_SECRET);
-console.log("CLIENT_URL:", process.env.CLIENT_URL);
 const express = require("express");
 const cors = require("cors");
 
@@ -25,9 +22,27 @@ const favoritesRoutes = require("./routes/favorites.routes");
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL || "*", credentials: false }));
+// ✅ Better CORS handling for local + deployed frontend
+const allowedOrigins =
+  process.env.CLIENT_URL === "*"
+    ? true
+    : process.env.CLIENT_URL?.split(",").map((s) => s.trim());
+
+app.use(
+  cors({
+    origin: allowedOrigins || true,
+    credentials: false,
+  })
+);
+
 app.use(express.json());
 
+// ✅ Root route so Render URL looks fine
+app.get("/", (req, res) => {
+  res.send("Mini SaaS Template Store API is running ✅");
+});
+
+// ✅ Health check
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
 app.use("/api/auth", authRoutes);
@@ -40,5 +55,5 @@ const PORT = process.env.PORT || 5000;
   await connectDB(process.env.MONGO_URI);
   await seedTemplatesIfEmpty();
 
-  app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+  app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 })();
