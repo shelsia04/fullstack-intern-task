@@ -1,4 +1,18 @@
 require("dotenv").config();
+process.on("unhandledRejection", (err) => {
+  console.error("❌ Unhandled Rejection:", err);
+  process.exit(1);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("❌ Uncaught Exception:", err);
+  process.exit(1);
+});
+
+console.log("✅ Booting server...");
+console.log("MONGO_URI set?", !!process.env.MONGO_URI);
+console.log("JWT_SECRET set?", !!process.env.JWT_SECRET);
+console.log("CLIENT_URL:", process.env.CLIENT_URL);
 const express = require("express");
 const cors = require("cors");
 
